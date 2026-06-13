@@ -184,8 +184,8 @@ Deferred — prototype classification. Will be addressed if the project scales t
 
 - A task always belongs to exactly one board and one column at a time.
 - The default board cannot be deleted (only renamed in US-10).
-- "Done" is identified by column name match; if a board renames its Done column, completion
-  metrics may need a explicit "is_done" flag — to revisit in Phase 2.
+- "Done" is identified by the `is_done` boolean flag on columns (ADR-005, Phase 2).
+  Renaming a column does not affect completion tracking.
 - The app will have a backend API from day one. Data is persisted server-side, not in the
   browser. This drives the Phase 2 stack recommendation.
 

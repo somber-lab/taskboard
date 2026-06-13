@@ -12,7 +12,7 @@
 | Backend framework | Hono + Node.js + TypeScript | Minimal surface area, first-class TS, fast — no NestJS overhead for this scale |
 | ORM | Drizzle | TypeScript-first schema; migrations as code; zero magic |
 | Database | PostgreSQL | Relational, reliable, JSON support, production-grade from day one |
-| Runtime | Node.js 20+ | LTS; native ESM; aligns with Hono and Drizzle recommendations |
+| Runtime | Node.js 22 | LTS; native ESM; aligns with Hono and Drizzle recommendations |
 
 ---
 
