@@ -1,23 +1,40 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { addColumn, getBoard, getBoardColumns } from '@/api/boards'
-import type { Board, Column } from '@/types'
+import { getTasks } from '@/api/tasks'
+import { TaskCard } from '@/components/task/TaskCard'
+import { TaskModal } from '@/components/task/TaskModal'
+import type { Board, Column, Task } from '@/types'
 
 export default function BoardPage() {
   const { id } = useParams<{ id: string }>()
   const boardId = Number(id)
 
-  const [board, setBoard] = useState<Board | null>(null)
-  const [cols, setCols] = useState<Column[]>([])
+  const [board, setBoard]           = useState<Board | null>(null)
+  const [cols, setCols]             = useState<Column[]>([])
+  const [taskMap, setTaskMap]       = useState<Map<number, Task[]>>(new Map())
+  const [showTaskModal, setShowTaskModal] = useState(false)
   const [newColName, setNewColName] = useState('')
-  const [addingCol, setAddingCol] = useState(false)
+  const [addingCol, setAddingCol]   = useState(false)
   const [showColForm, setShowColForm] = useState(false)
-  const [colError, setColError] = useState('')
+  const [colError, setColError]     = useState('')
+
+  const loadTasks = useCallback(async () => {
+    const all = await getTasks({ boardId })
+    const map = new Map<number, Task[]>()
+    for (const t of all) {
+      const arr = map.get(t.columnId) ?? []
+      arr.push(t)
+      map.set(t.columnId, arr)
+    }
+    setTaskMap(map)
+  }, [boardId])
 
   useEffect(() => {
     getBoard(boardId).then(setBoard)
     getBoardColumns(boardId).then(setCols)
-  }, [boardId])
+    loadTasks()
+  }, [boardId, loadTasks])
 
   async function handleAddColumn(e: React.FormEvent) {
     e.preventDefault()
@@ -36,44 +53,47 @@ export default function BoardPage() {
     }
   }
 
-  if (!board) {
-    return <div className="text-sm text-gray-400">Loading…</div>
-  }
+  if (!board) return <div className="text-sm text-gray-400">Loading…</div>
 
   return (
     <div className="flex h-full flex-col">
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6 flex items-center gap-4">
         <Link to="/boards" className="text-sm text-gray-400 hover:text-gray-600">← Boards</Link>
         <h1 className="text-2xl font-bold text-gray-900">{board.name}</h1>
         {board.isDefault && <span className="text-xs text-gray-400">Default</span>}
+        <div className="ml-auto">
+          <button
+            onClick={() => setShowTaskModal(true)}
+            className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700 transition-colors"
+          >
+            + New Task
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-1 gap-4 overflow-x-auto pb-4">
         {cols.map(col => (
           <div
             key={col.id}
-            className="flex w-64 shrink-0 flex-col rounded-lg border border-gray-200 bg-white"
+            className="flex w-64 shrink-0 flex-col rounded-lg border border-gray-200 bg-gray-50"
           >
-            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
+            <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 rounded-t-lg">
               <span className="text-sm font-semibold text-gray-700">{col.name}</span>
-              {col.isDone && (
-                <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                  Done
-                </span>
-              )}
+              <span className="text-xs text-gray-400">
+                {taskMap.get(col.id)?.length ?? 0}
+              </span>
             </div>
-            <div className="min-h-24 flex-1 p-3">
-              <p className="text-xs text-gray-300">No tasks yet</p>
+            <div className="flex flex-1 flex-col gap-2 p-3 min-h-32">
+              {(taskMap.get(col.id) ?? []).map(task => (
+                <TaskCard key={task.id} task={task} />
+              ))}
             </div>
           </div>
         ))}
 
         <div className="w-64 shrink-0">
           {showColForm ? (
-            <form
-              onSubmit={handleAddColumn}
-              className="rounded-lg border border-gray-200 bg-white p-3"
-            >
+            <form onSubmit={handleAddColumn} className="rounded-lg border border-gray-200 bg-white p-3">
               <input
                 autoFocus
                 value={newColName}
@@ -109,6 +129,14 @@ export default function BoardPage() {
           )}
         </div>
       </div>
+
+      {showTaskModal && (
+        <TaskModal
+          defaultBoardId={boardId}
+          onClose={() => setShowTaskModal(false)}
+          onCreated={loadTasks}
+        />
+      )}
     </div>
   )
 }
