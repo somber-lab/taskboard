@@ -19,6 +19,7 @@ export default function BoardPage() {
   const [taskMap, setTaskMap]             = useState<Map<number, Task[]>>(new Map())
   const [activeTask, setActiveTask]       = useState<Task | null>(null)
   const [showTaskModal, setShowTaskModal] = useState(false)
+  const [editTask, setEditTask]           = useState<Task | null>(null)
   const [newColName, setNewColName]       = useState('')
   const [addingCol, setAddingCol]         = useState(false)
   const [showColForm, setShowColForm]     = useState(false)
@@ -124,7 +125,7 @@ export default function BoardPage() {
               taskCount={taskMap.get(col.id)?.length ?? 0}
             >
               {(taskMap.get(col.id) ?? []).map(task => (
-                <DraggableTaskCard key={task.id} task={task} />
+                <DraggableTaskCard key={task.id} task={task} onEdit={setEditTask} />
               ))}
             </DroppableColumn>
           ))}
@@ -181,7 +182,15 @@ export default function BoardPage() {
         <TaskModal
           defaultBoardId={boardId}
           onClose={() => setShowTaskModal(false)}
-          onCreated={loadTasks}
+          onSaved={loadTasks}
+        />
+      )}
+
+      {editTask && (
+        <TaskModal
+          task={editTask}
+          onClose={() => setEditTask(null)}
+          onSaved={() => { setEditTask(null); loadTasks() }}
         />
       )}
     </div>

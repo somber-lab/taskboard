@@ -65,6 +65,7 @@ export default function ListPage() {
   const [tasks, setTasks]           = useState<TaskWithNames[]>([])
   const [sorting, setSorting]       = useState<SortingState>([])
   const [showModal, setShowModal]   = useState(false)
+  const [editTask, setEditTask]     = useState<TaskWithNames | null>(null)
 
   const load = () => getTasks().then(setTasks)
 
@@ -122,7 +123,8 @@ export default function ListPage() {
               {table.getRowModel().rows.map((row, i) => (
                 <tr
                   key={row.id}
-                  className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${i % 2 === 0 ? '' : 'bg-gray-50/30'}`}
+                  onClick={() => setEditTask(row.original)}
+                  className={`border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer ${i % 2 === 0 ? '' : 'bg-gray-50/30'}`}
                 >
                   {row.getVisibleCells().map(cell => (
                     <td key={cell.id} className="px-4 py-3">
@@ -142,7 +144,15 @@ export default function ListPage() {
       {showModal && (
         <TaskModal
           onClose={() => setShowModal(false)}
-          onCreated={load}
+          onSaved={load}
+        />
+      )}
+
+      {editTask && (
+        <TaskModal
+          task={editTask}
+          onClose={() => setEditTask(null)}
+          onSaved={() => { setEditTask(null); load() }}
         />
       )}
     </div>

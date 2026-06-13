@@ -41,3 +41,19 @@ export const moveTask = (taskId: number, columnId: number) =>
     method: 'PATCH',
     body: JSON.stringify({ columnId }),
   })
+
+export interface UpdateTaskInput {
+  title?: string
+  description?: string
+  startDate?: string | null
+  endDate?: string | null
+}
+
+export const updateTask = (taskId: number, data: UpdateTaskInput) =>
+  apiFetch<Task>(`/tasks/${taskId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+
+export const deleteTask = (taskId: number) =>
+  apiFetch<void>(`/tasks/${taskId}`, { method: 'DELETE' })

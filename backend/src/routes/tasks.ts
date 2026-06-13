@@ -88,6 +88,36 @@ router.post('/', zValidator('json', createTaskSchema), async (c) => {
   return c.json(task, 201)
 })
 
+const updateTaskSchema = z.object({
+  title:       z.string().min(1).max(500).optional(),
+  description: z.string().min(1).optional(),
+  startDate:   z.string().nullable().optional(),
+  endDate:     z.string().nullable().optional(),
+})
+
+router.patch('/:id', zValidator('json', updateTaskSchema), async (c) => {
+  const id = Number(c.req.param('id'))
+  if (isNaN(id)) return c.json({ error: 'Invalid task id' }, 400)
+  const data = c.req.valid('json')
+  const [task] = await db.select().from(tasks).where(eq(tasks.id, id))
+  if (!task) return c.json({ error: 'Task not found' }, 404)
+  const [updated] = await db
+    .update(tasks)
+    .set({ ...data, updatedAt: sql`now()` })
+    .where(eq(tasks.id, id))
+    .returning()
+  return c.json(updated)
+})
+
+router.delete('/:id', async (c) => {
+  const id = Number(c.req.param('id'))
+  if (isNaN(id)) return c.json({ error: 'Invalid task id' }, 400)
+  const [task] = await db.select().from(tasks).where(eq(tasks.id, id))
+  if (!task) return c.json({ error: 'Task not found' }, 404)
+  await db.delete(tasks).where(eq(tasks.id, id))
+  return c.body(null, 204)
+})
+
 router.patch('/:id/move', zValidator('json', moveSchema), async (c) => {
   const id = Number(c.req.param('id'))
   if (isNaN(id)) return c.json({ error: 'Invalid task id' }, 400)
