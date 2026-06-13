@@ -1,6 +1,7 @@
 import { NavLink, Route, Routes } from 'react-router-dom'
 import BoardPage from '@/pages/BoardPage'
 import BoardsPage from '@/pages/BoardsPage'
+import ListPage from '@/pages/ListPage'
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -32,7 +33,7 @@ export default function App() {
       </aside>
       <main className="flex-1 overflow-auto p-6">
         <Routes>
-          <Route path="/"           element={<Placeholder title="Task list" />} />
+          <Route path="/"           element={<ListPage />} />
           <Route path="/boards"     element={<BoardsPage />} />
           <Route path="/boards/:id" element={<BoardPage />} />
           <Route path="/dashboard"  element={<Placeholder title="Dashboard" />} />
