@@ -1,7 +1,11 @@
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { addColumn, getBoard, getBoardColumns } from '@/api/boards'
-import { getTasks } from '@/api/tasks'
+import { getTasks, moveTask } from '@/api/tasks'
+import { DraggableTaskCard } from '@/components/board/DraggableTaskCard'
+import { DroppableColumn } from '@/components/board/DroppableColumn'
 import { TaskCard } from '@/components/task/TaskCard'
 import { TaskModal } from '@/components/task/TaskModal'
 import type { Board, Column, Task } from '@/types'
@@ -10,14 +14,19 @@ export default function BoardPage() {
   const { id } = useParams<{ id: string }>()
   const boardId = Number(id)
 
-  const [board, setBoard]           = useState<Board | null>(null)
-  const [cols, setCols]             = useState<Column[]>([])
-  const [taskMap, setTaskMap]       = useState<Map<number, Task[]>>(new Map())
+  const [board, setBoard]                 = useState<Board | null>(null)
+  const [cols, setCols]                   = useState<Column[]>([])
+  const [taskMap, setTaskMap]             = useState<Map<number, Task[]>>(new Map())
+  const [activeTask, setActiveTask]       = useState<Task | null>(null)
   const [showTaskModal, setShowTaskModal] = useState(false)
-  const [newColName, setNewColName] = useState('')
-  const [addingCol, setAddingCol]   = useState(false)
-  const [showColForm, setShowColForm] = useState(false)
-  const [colError, setColError]     = useState('')
+  const [newColName, setNewColName]       = useState('')
+  const [addingCol, setAddingCol]         = useState(false)
+  const [showColForm, setShowColForm]     = useState(false)
+  const [colError, setColError]           = useState('')
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  )
 
   const loadTasks = useCallback(async () => {
     const all = await getTasks({ boardId })
@@ -35,6 +44,36 @@ export default function BoardPage() {
     getBoardColumns(boardId).then(setCols)
     loadTasks()
   }, [boardId, loadTasks])
+
+  function handleDragStart(event: DragStartEvent) {
+    setActiveTask(event.active.data.current?.task as Task)
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    setActiveTask(null)
+    if (!over) return
+
+    const taskId      = Number(active.id)
+    const newColumnId = Number(over.id)
+    const task        = active.data.current?.task as Task
+
+    if (task.columnId === newColumnId) return
+
+    // Optimistic update
+    setTaskMap(prev => {
+      const next = new Map(prev)
+      next.set(task.columnId, (next.get(task.columnId) ?? []).filter(t => t.id !== taskId))
+      next.set(newColumnId,   [...(next.get(newColumnId) ?? []), { ...task, columnId: newColumnId }])
+      return next
+    })
+
+    try {
+      await moveTask(taskId, newColumnId)
+    } catch {
+      await loadTasks() // revert on failure
+    }
+  }
 
   async function handleAddColumn(e: React.FormEvent) {
     e.preventDefault()
@@ -71,64 +110,72 @@ export default function BoardPage() {
         </div>
       </div>
 
-      <div className="flex flex-1 gap-4 overflow-x-auto pb-4">
-        {cols.map(col => (
-          <div
-            key={col.id}
-            className="flex w-64 shrink-0 flex-col rounded-lg border border-gray-200 bg-gray-50"
-          >
-            <div className="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 rounded-t-lg">
-              <span className="text-sm font-semibold text-gray-700">{col.name}</span>
-              <span className="text-xs text-gray-400">
-                {taskMap.get(col.id)?.length ?? 0}
-              </span>
-            </div>
-            <div className="flex flex-1 flex-col gap-2 p-3 min-h-32">
-              {(taskMap.get(col.id) ?? []).map(task => (
-                <TaskCard key={task.id} task={task} />
-              ))}
-            </div>
-          </div>
-        ))}
-
-        <div className="w-64 shrink-0">
-          {showColForm ? (
-            <form onSubmit={handleAddColumn} className="rounded-lg border border-gray-200 bg-white p-3">
-              <input
-                autoFocus
-                value={newColName}
-                onChange={e => { setNewColName(e.target.value); setColError('') }}
-                placeholder="Column name"
-                className="w-full rounded border border-gray-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-gray-900"
-              />
-              {colError && <p className="mt-1 text-xs text-red-600">{colError}</p>}
-              <div className="mt-2 flex gap-2">
-                <button
-                  type="submit"
-                  disabled={addingCol || !newColName.trim()}
-                  className="flex-1 rounded bg-gray-900 py-1.5 text-xs font-medium text-white disabled:opacity-50"
-                >
-                  {addingCol ? 'Adding…' : 'Add'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setShowColForm(false); setNewColName(''); setColError('') }}
-                  className="flex-1 rounded border border-gray-200 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          ) : (
-            <button
-              onClick={() => setShowColForm(true)}
-              className="w-full rounded-lg border border-dashed border-gray-300 px-4 py-3 text-sm text-gray-400 hover:border-gray-400 hover:text-gray-600 transition-colors"
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={() => setActiveTask(null)}
+      >
+        <div className="flex flex-1 gap-4 overflow-x-auto pb-4">
+          {cols.map(col => (
+            <DroppableColumn
+              key={col.id}
+              column={col}
+              taskCount={taskMap.get(col.id)?.length ?? 0}
             >
-              + Add column
-            </button>
-          )}
+              {(taskMap.get(col.id) ?? []).map(task => (
+                <DraggableTaskCard key={task.id} task={task} />
+              ))}
+            </DroppableColumn>
+          ))}
+
+          <div className="w-64 shrink-0">
+            {showColForm ? (
+              <form onSubmit={handleAddColumn} className="rounded-lg border border-gray-200 bg-white p-3">
+                <input
+                  autoFocus
+                  value={newColName}
+                  onChange={e => { setNewColName(e.target.value); setColError('') }}
+                  placeholder="Column name"
+                  className="w-full rounded border border-gray-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-gray-900"
+                />
+                {colError && <p className="mt-1 text-xs text-red-600">{colError}</p>}
+                <div className="mt-2 flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={addingCol || !newColName.trim()}
+                    className="flex-1 rounded bg-gray-900 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+                  >
+                    {addingCol ? 'Adding…' : 'Add'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setShowColForm(false); setNewColName(''); setColError('') }}
+                    className="flex-1 rounded border border-gray-200 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                onClick={() => setShowColForm(true)}
+                className="w-full rounded-lg border border-dashed border-gray-300 px-4 py-3 text-sm text-gray-400 hover:border-gray-400 hover:text-gray-600 transition-colors"
+              >
+                + Add column
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+
+        <DragOverlay>
+          {activeTask && (
+            <div className="rotate-2 opacity-95">
+              <TaskCard task={activeTask} />
+            </div>
+          )}
+        </DragOverlay>
+      </DndContext>
 
       {showTaskModal && (
         <TaskModal

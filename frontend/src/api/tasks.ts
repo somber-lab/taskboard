@@ -35,3 +35,9 @@ export const createTask = (data: CreateTaskInput) =>
     method: 'POST',
     body: JSON.stringify(data),
   })
+
+export const moveTask = (taskId: number, columnId: number) =>
+  apiFetch<Task>(`/tasks/${taskId}/move`, {
+    method: 'PATCH',
+    body: JSON.stringify({ columnId }),
+  })

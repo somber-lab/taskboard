@@ -1,9 +1,11 @@
 import { zValidator } from '@hono/zod-validator'
-import { asc, desc, eq } from 'drizzle-orm'
+import { asc, desc, eq, sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { z } from 'zod'
 import { db } from '../db/index'
 import { boards, columns, tasks } from '../db/schema'
+
+const moveSchema = z.object({ columnId: z.number().int().positive() })
 
 const router = new Hono()
 
@@ -84,6 +86,31 @@ router.post('/', zValidator('json', createTaskSchema), async (c) => {
     })
     .returning()
   return c.json(task, 201)
+})
+
+router.patch('/:id/move', zValidator('json', moveSchema), async (c) => {
+  const id = Number(c.req.param('id'))
+  if (isNaN(id)) return c.json({ error: 'Invalid task id' }, 400)
+  const { columnId } = c.req.valid('json')
+
+  const [[task], [targetCol]] = await Promise.all([
+    db.select().from(tasks).where(eq(tasks.id, id)),
+    db.select().from(columns).where(eq(columns.id, columnId)),
+  ])
+  if (!task)      return c.json({ error: 'Task not found' }, 404)
+  if (!targetCol) return c.json({ error: 'Column not found' }, 404)
+
+  const completedAt = targetCol.isDone
+    ? (task.completedAt ?? sql`now()`)
+    : null
+
+  const [updated] = await db
+    .update(tasks)
+    .set({ columnId, completedAt, updatedAt: sql`now()` })
+    .where(eq(tasks.id, id))
+    .returning()
+
+  return c.json(updated)
 })
 
 export default router
