@@ -3,8 +3,8 @@
 - **Project**: Taskboard
 - **One-liner**: Personal task manager with Kanban boards, sortable list view, and metrics dashboard
 - **Classification**: prototype (with a clear path to production)
-- **Current phase**: 3 — Development
-- **Phase status**: gate pending (all increments complete, README pending)
+- **Current phase**: 5 — Deployment
+- **Phase status**: closed
 
 ## Stack decisions
 
@@ -43,8 +43,10 @@
 - [x] docs/REQUIREMENTS.es.md
 - [x] docs/ARCHITECTURE.md
 - [x] docs/ARCHITECTURE.es.md
-- [ ] docs/TEST_PLAN.md
-- [ ] docs/DEPLOYMENT.md
+- [x] docs/TEST_PLAN.md
+- [x] docs/TEST_PLAN.es.md
+- [x] docs/DEPLOYMENT.md
+- [x] docs/DEPLOYMENT.es.md
 
 ## MVP User Stories — Status
 
@@ -64,7 +66,17 @@
 
 - README.md update with run instructions
 
+## Deployment
+
+| Target | Platform | Notes |
+|--------|----------|-------|
+| Frontend | Docker (Nginx) | Vite build served via nginx, /api proxied to backend |
+| Backend | Docker (Node 22) | tsup build, migrations on startup |
+| Database | Docker (PostgreSQL 16) | Named volume for persistence |
+| Orchestration | docker-compose.prod.yml | Single-host self-hosted |
+| CI | GitHub Actions | test + build on every push/PR |
+
 ## Next step
 
-All 9 MVP stories shipped. Phase 3 gate is pending README update.
-After that: Phase 4 (TEST_PLAN.md + automated tests) or Phase 5 (deployment).
+Phase 5 closed. Project is production-ready.
+Next: Phase 6 (Maintenance & Handoff) — monitoring plan, backlog of post-MVP features.

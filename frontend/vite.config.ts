@@ -9,6 +9,18 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react:    ['react', 'react-dom', 'react-router-dom'],
+          table:    ['@tanstack/react-table'],
+          dnd:      ['@dnd-kit/core', '@dnd-kit/utilities'],
+          recharts: ['recharts'],
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       '/api': 'http://localhost:3000',
