@@ -37,7 +37,7 @@ docker compose up -d
 
 ```bash
 cd backend
-cp .env.example .env   # already configured for local Docker
+cp .env.example .env   # pre-configured for local Docker — no changes needed
 npm install
 npm run db:generate    # generate Drizzle migrations
 npm run db:migrate     # apply migrations
