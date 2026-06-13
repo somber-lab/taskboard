@@ -111,6 +111,18 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full guide.
 
 ---
 
+## Continuing development
+
+To resume this project in any future session (same or different machine):
+
+```
+/app-dev-companion quiero añadir [X]. Tú decides si necesitamos volver a alguna fase o lo resolvemos directamente.
+```
+
+The skill will read `PROJECT_STATE.md`, understand the full context, and decide whether the change needs a formal phase (analysis, architecture) or can be implemented directly. You only need to describe the idea.
+
+---
+
 ## Available routes
 
 | Path | View |
