@@ -4,8 +4,9 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { seed } from './db/seed'
-import boardsRouter from './routes/boards'
-import tasksRouter  from './routes/tasks'
+import boardsRouter    from './routes/boards'
+import dashboardRouter from './routes/dashboard'
+import tasksRouter     from './routes/tasks'
 
 const app = new Hono()
 
@@ -14,8 +15,9 @@ app.use('*', cors({ origin: process.env.ALLOWED_ORIGIN ?? 'http://localhost:5173
 
 const api = new Hono()
 api.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }))
-api.route('/boards', boardsRouter)
-api.route('/tasks',  tasksRouter)
+api.route('/boards',    boardsRouter)
+api.route('/tasks',     tasksRouter)
+api.route('/dashboard', dashboardRouter)
 
 app.route('/api', api)
 

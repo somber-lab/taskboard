@@ -1,6 +1,7 @@
 import { NavLink, Route, Routes } from 'react-router-dom'
 import BoardPage from '@/pages/BoardPage'
 import BoardsPage from '@/pages/BoardsPage'
+import DashboardPage from '@/pages/DashboardPage'
 import ListPage from '@/pages/ListPage'
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -9,14 +10,6 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
       ? 'bg-gray-100 text-gray-900'
       : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
   }`
-
-function Placeholder({ title }: { title: string }) {
-  return (
-    <div className="flex h-full items-center justify-center text-gray-400 text-lg">
-      {title} — coming soon
-    </div>
-  )
-}
 
 export default function App() {
   return (
@@ -36,7 +29,7 @@ export default function App() {
           <Route path="/"           element={<ListPage />} />
           <Route path="/boards"     element={<BoardsPage />} />
           <Route path="/boards/:id" element={<BoardPage />} />
-          <Route path="/dashboard"  element={<Placeholder title="Dashboard" />} />
+          <Route path="/dashboard"  element={<DashboardPage />} />
         </Routes>
       </main>
     </div>
