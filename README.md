@@ -22,13 +22,53 @@ Personal task manager with Kanban boards, sortable list view, and a metrics dash
 ## Prerequisites
 
 - Node.js 20+
-- Docker (for PostgreSQL)
-- pnpm (recommended) or npm
+- Docker + Docker Compose (for PostgreSQL)
+- npm
 
 ## Getting started
 
-> Setup instructions will be added in Phase 3 once the scaffold is complete.
+### 1. Start the database
+
+```bash
+docker compose up -d
+```
+
+### 2. Backend
+
+```bash
+cd backend
+cp .env.example .env   # already configured for local Docker
+npm install
+npm run db:generate    # generate Drizzle migrations
+npm run db:migrate     # apply migrations
+npm run dev            # starts on http://localhost:3000
+```
+
+> The backend seeds a default board ("My Board") with 4 columns on first start.
+
+### 3. Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev            # starts on http://localhost:5173
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+## Available routes
+
+| Path | View |
+|------|------|
+| `/` | Sortable list of all tasks |
+| `/boards` | Board list — create and navigate boards |
+| `/boards/:id` | Kanban board with drag & drop |
+| `/dashboard` | Metrics: tasks by status, completions, overdue |
+
+## API base URL
+
+`http://localhost:3000/api` — proxied through Vite dev server as `/api`.
 
 ## Status
 
-Phase 2 complete — Architecture defined. Development starting.
+Phase 3 complete — all 9 MVP user stories shipped.

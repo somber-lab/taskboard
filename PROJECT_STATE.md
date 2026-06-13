@@ -3,8 +3,8 @@
 - **Project**: Taskboard
 - **One-liner**: Personal task manager with Kanban boards, sortable list view, and metrics dashboard
 - **Classification**: prototype (with a clear path to production)
-- **Current phase**: 2 — Design & Architecture
-- **Phase status**: gate pending
+- **Current phase**: 3 — Development
+- **Phase status**: gate pending (all increments complete, README pending)
 
 ## Stack decisions
 
@@ -46,14 +46,25 @@
 - [ ] docs/TEST_PLAN.md
 - [ ] docs/DEPLOYMENT.md
 
+## MVP User Stories — Status
+
+| ID | Story | Status |
+|----|-------|--------|
+| US-01 | Sortable task list | ✅ Done (Inc-4) |
+| US-02 | Create task | ✅ Done (Inc-2) |
+| US-03 | Edit task | ✅ Done (Inc-5) |
+| US-04 | Delete task | ✅ Done (Inc-5) |
+| US-05 | Kanban board view | ✅ Done (Inc-3) |
+| US-06 | Drag & drop between columns | ✅ Done (Inc-3) |
+| US-07 | Create / list boards | ✅ Done (Inc-1) |
+| US-08 | Configurable columns | ✅ Done (Inc-1) |
+| US-09 | Metrics dashboard | ✅ Done (Inc-6) |
+
 ## Open questions / pending
 
-- Stack selection (Phase 2)
+- README.md update with run instructions
 
 ## Next step
 
-Enter Phase 3: Development.
-Scaffold the repo structure (frontend/ + backend/), install dependencies,
-wire up the Hono server, Drizzle schema, and Vite frontend.
-Build in US order: US-07 (boards) → US-08 (columns) → US-02 (create task) → US-05 (board view)
-→ US-06 (DnD) → US-01 (list) → US-03/04 (edit/delete) → US-09 (dashboard).
+All 9 MVP stories shipped. Phase 3 gate is pending README update.
+After that: Phase 4 (TEST_PLAN.md + automated tests) or Phase 5 (deployment).
