@@ -3,6 +3,8 @@ import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
+import { migrate } from 'drizzle-orm/postgres-js/migrator'
+import { db } from './db/index'
 import { seed } from './db/seed'
 import boardsRouter    from './routes/boards'
 import dashboardRouter from './routes/dashboard'
@@ -23,7 +25,8 @@ app.route('/api', api)
 
 const port = Number(process.env.PORT) || 3000
 
-seed()
+migrate(db, { migrationsFolder: './migrations' })
+  .then(() => seed())
   .then(() => {
     serve({ fetch: app.fetch, port }, () => {
       console.log(`Backend running on http://localhost:${port}`)
